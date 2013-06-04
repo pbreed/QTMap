@@ -16,12 +16,12 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     view.cpp \
     myscene.cpp \
-    chip.cpp
+    wp.cpp
 
 HEADERS  += mainwindow.h \
     view.h \
     myscene.h \
-    chip.h
+    wp.h
     
 QT += widgets
 qtHaveModule(printsupport): QT += printsupport
