@@ -68,6 +68,7 @@ protected:
 private slots:
     void newFile();
     void open();
+    void openTrack();
     bool save();
     bool saveAs();
     void about();
@@ -82,6 +83,7 @@ private:
     void writeSettings();
     bool maybeSave();
     void loadFile(const QString &fileName);
+    void loadTrack(const QString &filename);
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     QString strippedName(const QString &fullFileName);
@@ -95,7 +97,8 @@ private:
     QToolBar *editToolBar;
     QAction *newAct;
     QAction *openAct;
-     QAction *saveAct;
+    QAction *openTrackAct;
+    QAction *saveAct;
     QAction *saveAsAct;
     QAction *exitAct;
     QAction *cutAct;
@@ -106,6 +109,7 @@ private:
 
     void setupMatrix();
     void populateScene();
+    QString m_LastPath;
     QWidget * Holder;
     MyScene *scene;
     QListWidget *List;

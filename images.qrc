@@ -11,5 +11,6 @@
         <file>images/save.png</file>
         <file>images/zoomin.png</file>
         <file>images/zoomout.png</file>
+        <file>images/opentrack.png</file>
     </qresource>
 </RCC>

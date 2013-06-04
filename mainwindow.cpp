@@ -189,7 +189,7 @@ void MainWindow::open()
 //! [7] //! [8]
 {
     if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this);
+         QString fileName = QFileDialog::getOpenFileName(this,QString("File to Open"),m_LastPath);
         if (!fileName.isEmpty()) loadFile(fileName);
     }
 }
@@ -252,6 +252,12 @@ void MainWindow::createActions()
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+    openTrackAct = new QAction(QIcon(":/images/opentrack.png"), tr("Open&Track..."), this);
+    openTrackAct->setStatusTip(tr("Open a track file"));
+    connect(openTrackAct, SIGNAL(triggered()), this, SLOT(openTrack()));
+
+
 //! [18] //! [19]
 
     saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
@@ -305,6 +311,7 @@ void MainWindow::createActions()
     copyAct->setEnabled(false);
     //connect(textEdit, SIGNAL(copyAvailable(bool)),  cutAct, SLOT(setEnabled(bool)));
     //connect(textEdit, SIGNAL(copyAvailable(bool)), copyAct, SLOT(setEnabled(bool)));
+
 }
 //! [24]
 
@@ -316,6 +323,7 @@ void MainWindow::createMenus()
     fileMenu->addAction(newAct);
 //! [28]
     fileMenu->addAction(openAct);
+    fileMenu->addAction(openTrackAct);
 //! [28]
     fileMenu->addAction(saveAct);
 //! [26]
@@ -343,6 +351,7 @@ void MainWindow::createToolBars()
     fileToolBar->addAction(newAct);
 //! [29] //! [31]
     fileToolBar->addAction(openAct);
+    fileToolBar->addAction(openTrackAct);
 //! [31]
     fileToolBar->addAction(saveAct);
 
@@ -368,6 +377,8 @@ void MainWindow::readSettings()
     QSettings settings("QtProject", "Application Example");
     QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
     QSize size = settings.value("size", QSize(400, 400)).toSize();
+    QString s=   settings.value("lastpath",QString("C:\\")).toString();
+    m_LastPath=s;
     resize(size);
     move(pos);
 }
@@ -380,6 +391,7 @@ void MainWindow::writeSettings()
     QSettings settings("QtProject", "Application Example");
     settings.setValue("pos", pos());
     settings.setValue("size", size());
+    settings.setValue("lastpath",m_LastPath);
 }
 //! [38] //! [39]
 
@@ -531,4 +543,84 @@ void MainWindow::AddWP(WP *p)
 
 }
 
+
+void MainWindow::loadTrack(const QString &fileName)
+{   QFile file(fileName);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(fileName)
+                             .arg(file.errorString()));
+        return;
+    }
+
+    setCurrentFile(fileName);
+    statusBar()->showMessage(tr("File loaded"), 2000);
+    static int filenum;
+    QPen qp;
+    switch(filenum++)
+    {
+    case 0:qp=QPen(QColor(0,255,0)); break;
+    case 1:qp=QPen(QColor(0,0,255)); break;
+    case 2:qp=QPen(QColor(0,255,255)); break;
+    case 3:qp=QPen(QColor(255,255,0)); break;
+    case 4:qp=QPen(QColor(255,0,255)); break;
+    default:
+           qp=QPen(QColor(0,0,0)); break;
+    }
+
+
+    qp.setWidth(25);
+
+
+
+    QTextStream in(&file);
+    int np=0;
+    int llat;int llon;
+
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+
+        {int lat; int lon;
+            int n;
+            n=sscanf(line.toLatin1(),"%d,%d",&lat,&lon);
+            if(n==2)
+            {
+                if(Lat_Off==0)
+                {
+                    Lat_Off=lat;
+                    Lon_Off=lon;
+                }
+                    if(np)
+                    {
+                       int x1=lon-Lon_Off;
+                       int x2=llon-Lon_Off;
+                       int y1=Lat_Off-lat;
+                       int y2=Lat_Off-llat;
+                        QGraphicsLineItem * item= new QGraphicsLineItem(x1,y1,x2,y2);
+                        item->setPen(qp);
+                        scene->addItem(item);
+                     }
+                    np++;
+                    llat=lat;
+                    llon=lon;
+
+            }
+        }
+
+    }
+
+
+}
+
+
+void MainWindow::openTrack()
+{
+        QString fileName = QFileDialog::getOpenFileName(this,QString("Track files"),m_LastPath);
+     if (!fileName.isEmpty())
+     { QFileInfo fileinfo(fileName);
+       m_LastPath=fileinfo.filePath();
+       loadTrack(fileName);
+     }
+}
 
