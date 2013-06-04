@@ -15,7 +15,7 @@
       {
       QPointF p=mE->buttonDownScenePos(b);
       //QColor color(255,0,0);
-      WP *item = new WP();
+      WP *item = new WP(m_pParrent->GetLatOff(),m_pParrent->GetLonOff());
       item->setPos(p);
       addItem(item);
       m_pParrent->AddWP(item);

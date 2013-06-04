@@ -5,12 +5,12 @@
 #include <QColor>
 #include <QGraphicsItem>
 #include <QListWidgetItem>
-class MyScene;
+
 
 class WP : public QGraphicsItem
 {
 public:
-    WP();
+    WP(int lat_off, int lon_off);
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
@@ -28,6 +28,10 @@ private:
     QListWidgetItem * row;
     QColor color;
     QVector<QPointF> stuff;
+    qreal m_lat_off;
+    qreal m_lon_off;
+    int wpn;
+
 public:
     void SetRow(QListWidgetItem *	item) {row=item; FixUpList();}
   };

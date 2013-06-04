@@ -3,7 +3,7 @@
 #include "myscene.h"
 #include <QtWidgets>
 
-WP::WP()
+WP::WP(int lato,int lono)
 {
    static int zn;
     this->color = QColor(255,0,0);
@@ -12,7 +12,10 @@ WP::WP()
 
     setAcceptHoverEvents(true);
     row=NULL;
-}
+    m_lat_off=lato;
+    m_lon_off=lono;
+    wpn=zn;
+ }
 
 QRectF WP::boundingRect() const
 {
@@ -49,6 +52,9 @@ void WP::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidge
         painter->drawLine(-50,-50,50,50);
 		painter->drawLine(-50,50,50,-50);
         painter->setPen(p);
+        painter->setFont(QFont("Times", 20, QFont::Bold));
+
+        painter->drawText(QPoint(0,-25),QString::number(wpn));
         return;
     }
 
@@ -63,6 +69,9 @@ void WP::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidge
      painter->setPen(mp);
      painter->drawLine(-50,-50,50,50);
 	painter->drawLine(-50,50,50,-50);
+    painter->setFont(QFont("Times", 20, QFont::Bold));
+
+    painter->drawText(QPoint(0,-25),QString::number(wpn));
     painter->setPen(p);
     return;
     
@@ -108,7 +117,7 @@ void WP::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void WP::FixUpList()
 {
-    QString s=QString::number(this->x())+","+QString::number(this->y());
+    QString s=QString::number(this->x()+m_lon_off,'f',12)+","+QString::number(m_lat_off-this->y(),'f',12);
     if(row) row->setText(s);
 
 }
@@ -118,7 +127,6 @@ void WP::FixUpList()
      if (change == ItemPositionChange && scene())
      {
             // value is the new position.
-            QPointF newPos = value.toPointF();
             FixUpList();
      }
      return QGraphicsItem::itemChange(change, value);

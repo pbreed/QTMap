@@ -95,7 +95,7 @@ private:
     QToolBar *editToolBar;
     QAction *newAct;
     QAction *openAct;
-    QAction *saveAct;
+     QAction *saveAct;
     QAction *saveAsAct;
     QAction *exitAct;
     QAction *cutAct;
@@ -110,8 +110,11 @@ private:
     MyScene *scene;
     QListWidget *List;
     QList<WP*> WPList;
-
-
+    int Lat_Off;
+    int Lon_Off;
+public:
+    int GetLatOff(){return Lat_Off; };
+    int GetLonOff(){return Lon_Off; };
 };
 
 #endif // MAINWINDOW_H
