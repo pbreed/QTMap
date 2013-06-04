@@ -48,6 +48,7 @@
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QtWidgets>
+#include <QClipboard>
 
 MainWindow::MainWindow()
 {
@@ -287,7 +288,7 @@ void MainWindow::createActions()
     copyAct = new QAction(QIcon(":/images/copy.png"), tr("&Copy"), this);
     copyAct->setShortcuts(QKeySequence::Copy);
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
-    //connect(copyAct, SIGNAL(triggered()), textEdit, SLOT(copy()));
+    connect(copyAct, SIGNAL(triggered()), this, SLOT(copy()));
 
     pasteAct = new QAction(QIcon(":/images/paste.png"), tr("&Paste"), this);
     pasteAct->setShortcuts(QKeySequence::Paste);
@@ -420,7 +421,7 @@ void MainWindow::loadFile(const QString &fileName)
 //! [42] //! [43]
 {
     QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    if (!file.open(QFile::ReadOnly)) {
         QMessageBox::warning(this, tr("Application"),
                              tr("Cannot read file %1:\n%2.")
                              .arg(fileName)
@@ -430,60 +431,39 @@ void MainWindow::loadFile(const QString &fileName)
 
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("File loaded"), 2000);
-    static int filenum;
-    QPen qp;
-    switch(filenum++)
+
+    QDataStream in(&file);
+    QString s;
+    in>>s;
+    if(s!="URMAPFILE")
     {
-    case 0:qp=QPen(QColor(0,255,0)); break;
-    case 1:qp=QPen(QColor(0,0,255)); break;
-    case 2:qp=QPen(QColor(0,255,255)); break;
-    case 3:qp=QPen(QColor(255,255,0)); break;
-    case 4:qp=QPen(QColor(255,0,255)); break;
-    default:
-           qp=QPen(QColor(0,0,0)); break;
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot read file %1:\n Wrong format.%2")
+                             .arg(fileName).arg(s));
+        return;
     }
 
-
-    qp.setWidth(25);
-
-
-
-    QTextStream in(&file);
-    int np=0;
-    int llat;int llon;
-
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-
-        {int lat; int lon;
-            int n;
-            n=sscanf(line.toLatin1(),"%d,%d",&lat,&lon);
-            if(n==2)
-            {
-                if(Lat_Off==0)
-                {
-                    Lat_Off=lat;
-                    Lon_Off=lon;
-                }
-                    if(np)
-                    {
-                       int x1=lon-Lon_Off;
-                       int x2=llon-Lon_Off;
-                       int y1=Lat_Off-lat;
-                       int y2=Lat_Off-llat;
-                        QGraphicsLineItem * item= new QGraphicsLineItem(x1,y1,x2,y2);
-                        item->setPen(qp);
-                        scene->addItem(item);
-                     }
-                    np++;
-                    llat=lat;
-                    llon=lon;
-
-            }
-        }
-
+    int n;
+    in>>n;
+    for(int i=0; i<n; i++)
+    {
+    QList<int> * List = new QList<int>;
+    in>>*List;
+    Tracks.append(List);
+    ReadList(*List);
     }
-
+    in >>n;
+    for(int i=0; i<n; i++)
+    {
+     int lat,lon;
+     in>>lat;
+     in>>lon;
+     WP *item = new WP(GetLatOff(),GetLonOff());
+     QPointF  p((lon-GetLonOff()),-(lat-GetLatOff()));
+     item->setPos(p);
+     scene->addItem(item);
+     AddWP(item);
+    }
 
 }
 //! [43]
@@ -493,7 +473,7 @@ bool MainWindow::saveFile(const QString &fileName)
 //! [44] //! [45]
 {
     QFile file(fileName);
-    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+    if (!file.open(QFile::WriteOnly)) {
         QMessageBox::warning(this, tr("Application"),
                              tr("Cannot write file %1:\n%2.")
                              .arg(fileName)
@@ -501,7 +481,24 @@ bool MainWindow::saveFile(const QString &fileName)
         return false;
     }
 
-    QTextStream out(&file);
+    QDataStream out(&file);
+    QString s="URMAPFILE";
+    out<<s;
+    int n=Tracks.count();
+    out<<n;
+    for(int i=0; i<n; i++)
+    {
+        out<<*(Tracks.at(i));
+    }
+
+     out<< WPList.size();
+
+    for (int i = 0; i < WPList.size(); ++i)
+    {
+      WP * pwp=WPList.at(i);
+        out<<pwp->GetLat();
+        out<<pwp->GetLon();
+    }
 
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("File saved"), 2000);
@@ -534,15 +531,63 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 
 
+
 void MainWindow::AddWP(WP *p)
 {
     WPList.append(p);
     QListWidgetItem * pi=new QListWidgetItem("");
      List->addItem(pi);
      p->SetRow(pi);
+     copyAct->setEnabled(true);
 
 }
 
+
+  void MainWindow::ReadList(QList<int> &list)
+  {
+      int np=0;
+      int llat;int llon;
+
+      static int listnum;
+      QPen qp;
+      switch(listnum++)
+      {
+      case 0:qp=QPen(QColor(0,255,0)); break;
+      case 1:qp=QPen(QColor(0,0,255)); break;
+      case 2:qp=QPen(QColor(0,255,255)); break;
+      case 3:qp=QPen(QColor(255,255,0)); break;
+      case 4:qp=QPen(QColor(255,0,255)); break;
+      default:
+             qp=QPen(QColor(0,0,0)); break;
+      }
+
+
+      qp.setWidth(25);
+      for(int i=0; i<list.count(); i+=2)
+      {int lat=list.at(i);
+          int lon=list.at(i+1);
+
+          if(Lat_Off==0)
+          {
+              Lat_Off=lat;
+              Lon_Off=lon;
+          }
+           if(np)
+             {
+                int x1=lon-Lon_Off;
+                int x2=llon-Lon_Off;
+                int y1=Lat_Off-lat;
+                int y2=Lat_Off-llat;
+                 QGraphicsLineItem * item= new QGraphicsLineItem(x1,y1,x2,y2);
+                 item->setPen(qp);
+                 scene->addItem(item);
+              }
+             np++;
+             llat=lat;
+             llon=lon;
+      }
+
+  }
 
 void MainWindow::loadTrack(const QString &fileName)
 {   QFile file(fileName);
@@ -554,30 +599,11 @@ void MainWindow::loadTrack(const QString &fileName)
         return;
     }
 
-    setCurrentFile(fileName);
-    statusBar()->showMessage(tr("File loaded"), 2000);
-    static int filenum;
-    QPen qp;
-    switch(filenum++)
-    {
-    case 0:qp=QPen(QColor(0,255,0)); break;
-    case 1:qp=QPen(QColor(0,0,255)); break;
-    case 2:qp=QPen(QColor(0,255,255)); break;
-    case 3:qp=QPen(QColor(255,255,0)); break;
-    case 4:qp=QPen(QColor(255,0,255)); break;
-    default:
-           qp=QPen(QColor(0,0,0)); break;
-    }
+    statusBar()->showMessage(tr("Track loaded"), 2000);
 
-
-    qp.setWidth(25);
-
-
+    QList<int> * List = new QList<int>;
 
     QTextStream in(&file);
-    int np=0;
-    int llat;int llon;
-
     while (!in.atEnd()) {
         QString line = in.readLine();
 
@@ -586,30 +612,23 @@ void MainWindow::loadTrack(const QString &fileName)
             n=sscanf(line.toLatin1(),"%d,%d",&lat,&lon);
             if(n==2)
             {
-                if(Lat_Off==0)
-                {
-                    Lat_Off=lat;
-                    Lon_Off=lon;
-                }
-                    if(np)
-                    {
-                       int x1=lon-Lon_Off;
-                       int x2=llon-Lon_Off;
-                       int y1=Lat_Off-lat;
-                       int y2=Lat_Off-llat;
-                        QGraphicsLineItem * item= new QGraphicsLineItem(x1,y1,x2,y2);
-                        item->setPen(qp);
-                        scene->addItem(item);
-                     }
-                    np++;
-                    llat=lat;
-                    llon=lon;
+                List->append(lat);
+                List->append(lon);
+
 
             }
         }
 
     }
-
+    if(!List->isEmpty())
+    {
+        Tracks.append(List);
+        ReadList(*List);
+    }
+    else
+    {
+     delete List;
+    }
 
 }
 
@@ -622,5 +641,17 @@ void MainWindow::openTrack()
        m_LastPath=fileinfo.filePath();
        loadTrack(fileName);
      }
+}
+
+void MainWindow::copy()
+{
+     QClipboard *clipboard = QApplication::clipboard();
+     QString s="const int [][2]={\n";
+     for (int i = 0; i < WPList.size(); ++i) {
+
+          s+=WPList.at(i)->GetCString();
+       }
+     s+="\n{0,0}};\n";
+    clipboard->setText(s);
 }
 

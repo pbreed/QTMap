@@ -34,6 +34,11 @@ private:
 
 public:
     void SetRow(QListWidgetItem *	item) {row=item; FixUpList();}
+    QString GetCString();
+    int GetLat();
+    int GetLon();
+
+
   };
 
-#endif // CHIP_H
+#endif // WP_H

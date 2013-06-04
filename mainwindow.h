@@ -73,6 +73,7 @@ private slots:
     bool saveAs();
     void about();
     void documentWasModified();
+    void copy();
 
 private:
     void createActions();
@@ -87,6 +88,7 @@ private:
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     QString strippedName(const QString &fullFileName);
+    void ReadList(QList<int> &list);
 
     QString curFile;
 
@@ -112,6 +114,7 @@ private:
     QString m_LastPath;
     QWidget * Holder;
     MyScene *scene;
+    QList<QList<int>*> Tracks;
     QListWidget *List;
     QList<WP*> WPList;
     int Lat_Off;

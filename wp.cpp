@@ -117,9 +117,25 @@ void WP::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void WP::FixUpList()
 {
-    QString s=QString::number(this->x()+m_lon_off,'f',12)+","+QString::number(m_lat_off-this->y(),'f',12);
+    QString s=QString::number(this->x()+m_lon_off,'f',0)+","+QString::number(m_lat_off-this->y(),'f',0);
     if(row) row->setText(s);
 
+}
+
+QString WP::GetCString()
+{
+    QString s="{"+QString::number(this->x()+m_lon_off,'f',0)+","+QString::number(m_lat_off-this->y(),'f',0)+"},\n";
+  return s;
+}
+
+
+int WP::GetLat()
+{
+    return (int)(m_lat_off-this->y());
+}
+int WP::GetLon()
+{
+return (int)(this->x()+m_lon_off);
 }
 
  QVariant WP::itemChange(GraphicsItemChange change, const QVariant & value)
