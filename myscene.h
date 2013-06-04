@@ -9,19 +9,23 @@ class QSlider;
 class QToolButton;
 QT_END_NAMESPACE
 
+class MainWindow;
+class WP;
+
 class MyScene : public QGraphicsScene
 {
     Q_OBJECT
-public:
-    explicit MyScene() {};
     
 signals:
     
 public slots:
 
 protected:
+    MainWindow * m_pParrent;
     virtual void mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent );
-    
+public:
+    MyScene(MainWindow * pParent) {m_pParrent=pParent;};
+
 };
 
 #endif // MYSCENE_H

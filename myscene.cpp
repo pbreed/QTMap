@@ -1,5 +1,5 @@
 
-#include "chip.h"
+#include "wp.h"
 #include "mainwindow.h"
 #include "view.h"
 #include "myscene.h"
@@ -14,13 +14,11 @@
       if(b==Qt::RightButton)
       {
       QPointF p=mE->buttonDownScenePos(b);
-      int xx=p.x();
-      int yy=p.y();
-
-      QColor color(255,0,0);
-      QGraphicsItem *item = new Chip(color, xx, yy);
+      //QColor color(255,0,0);
+      WP *item = new WP();
       item->setPos(p);
       addItem(item);
+      m_pParrent->AddWP(item);
       }
    else
         QGraphicsScene::mousePressEvent(mE);

@@ -43,27 +43,75 @@
 #define MAINWINDOW_H
 
 #include <QWidget>
+#include <QMainWindow>
+#include <QListWidget>
 
 QT_BEGIN_NAMESPACE
 class QGraphicsScene;
 class QSplitter;
+class QAction;
+class QMenu;
 QT_END_NAMESPACE
 
 class MyScene;
-
-class MainWindow : public QWidget
+class WP;
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(QWidget *parent = 0);
-    
+    MainWindow();
+    void AddWP(WP *);
+
+protected:
+    void closeEvent(QCloseEvent *event);
+
+private slots:
+    void newFile();
+    void open();
+    bool save();
+    bool saveAs();
+    void about();
+    void documentWasModified();
+
 private:
+    void createActions();
+    void createMenus();
+    void createToolBars();
+    void createStatusBar();
+    void readSettings();
+    void writeSettings();
+    bool maybeSave();
+    void loadFile(const QString &fileName);
+    bool saveFile(const QString &fileName);
+    void setCurrentFile(const QString &fileName);
+    QString strippedName(const QString &fullFileName);
+
+    QString curFile;
+
+    QMenu *fileMenu;
+    QMenu *editMenu;
+    QMenu *helpMenu;
+    QToolBar *fileToolBar;
+    QToolBar *editToolBar;
+    QAction *newAct;
+    QAction *openAct;
+    QAction *saveAct;
+    QAction *saveAsAct;
+    QAction *exitAct;
+    QAction *cutAct;
+    QAction *copyAct;
+    QAction *pasteAct;
+    QAction *aboutAct;
+    QAction *aboutQtAct;
+
     void setupMatrix();
     void populateScene();
-    
+    QWidget * Holder;
     MyScene *scene;
-    QSplitter *h1Splitter;
-    QSplitter *h2Splitter;
+    QListWidget *List;
+    QList<WP*> WPList;
+
+
 };
 
 #endif // MAINWINDOW_H
